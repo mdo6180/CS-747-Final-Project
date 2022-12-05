@@ -4,3 +4,6 @@ t10k-labels.idx1-ubyte
 train-labels.idx1-ubyte
 notMNIST_small/
 **/__pycache__/
+GPU-Instance-Key.pem
+saved_models/
+plots/

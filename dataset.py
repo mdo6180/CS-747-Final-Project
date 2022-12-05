@@ -10,6 +10,8 @@ from torchvision import transforms
 from matplotlib import pyplot as plt
 from PIL import Image
 
+import os
+
 
 class MNISTDataset(Dataset):
     # mnist test dataset: 10,000 samples
@@ -96,7 +98,17 @@ class MNISTDataset(Dataset):
         self.x = X
         self.y = Y
         self.num_samples = self.y.shape[0]
-        self.transform = transform
+
+        if transform is not None:
+            self.transform = transform
+
+        else:
+            self.transform = transforms.Compose(
+                [
+                    transforms.ToTensor(), 
+                    transforms.Resize((32,32))
+                ]
+            )
 
     def __getitem__(self, index):
         IMG_SHAPE = (28,28)
@@ -162,3 +174,24 @@ class NotMNISTDataset(Dataset):
 
     def __len__(self):
         return self.num_samples
+
+
+def generate_plot(figname):
+    year = [1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010]
+    unemployment_rate = [9.8, 12, 8, 7.2, 6.9, 7, 6.5, 6.2, 5.5, 6.3]
+    
+    plt.figure()
+    plt.plot(year, unemployment_rate)
+    plt.title('unemployment rate vs year')
+    plt.xlabel('year')
+    plt.ylabel('unemployment rate')
+    plt.savefig(f"./plots/{figname}")
+    
+
+if __name__ == "__main__":
+    if os.path.exists("./plots") is False:
+        os.makedirs("./plots")
+
+    generate_plot("unemployment1.png")
+    generate_plot("unemployment2.png")
+        
