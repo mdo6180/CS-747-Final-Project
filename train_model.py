@@ -34,7 +34,10 @@ def get_accuracy(model, data_loader, device):
             n += y_true.size(0)
             correct_pred += (predicted_labels == y_true).sum()
 
-    return correct_pred.detach().numpy() / n
+    if torch.cuda.is_available() is True:
+        return correct_pred.cpu().detach().numpy() / n
+    else:
+        return correct_pred.detach().numpy() / n
 
 def generate_plot(
     x_data, y_data, x_axis_label, y_axis_label, title, filename=None
@@ -114,31 +117,19 @@ if __name__ == "__main__":
     if os.path.exists("./saved_models") is False:
         os.makedirs("./saved_models")
 
-    # used for training on Apple Silicon Macbook Pro
-    # device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
+    if torch.cuda.is_available() is True:
+        print("Training on Nvidia GPU")
 
-    if torch.backends.mps.is_available():
-        print("MPS backend is available")
-        if torch.backends.mps.is_built():
-            print("MPS backend is built")
-    else:
-        if not torch.backends.mps.is_built():
-            print("MPS not available because the current PyTorch install was not "
-                "built with MPS enabled.")
-        else:
-            print("MPS not available because the current MacOS version is not 12.3+ "
-                "and/or you do not have an MPS-enabled device on this machine.")
-
-    device = torch.device("cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = Net()
     model.to(device)
 
     train_dataset = MNISTDataset(split="train") 
-    train_dataloader = DataLoader(dataset=train_dataset, batch_size=20)  
+    train_dataloader = DataLoader(dataset=train_dataset, batch_size=100)  
 
     test_dataset = MNISTDataset(split="test") 
-    test_dataloader = DataLoader(dataset=test_dataset, batch_size=20)
+    test_dataloader = DataLoader(dataset=test_dataset, batch_size=100)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -154,8 +145,8 @@ if __name__ == "__main__":
         for batch_index, batch in enumerate(train_dataloader):
             # get the inputs; batch is a tuple of (images, labels)
             images, labels = batch
-            images.to(device)
-            labels.to(device)
+            images = images.to(device)
+            labels = labels.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -202,23 +193,3 @@ if __name__ == "__main__":
         x_data=epochs, y_data=test_accuracy_scores, x_axis_label="Epochs", title="Testing Accuracy", 
         y_axis_label="Percent Accuracy", filename="012-mnist-testing-accuracy.png",
     )
-
-    """
-    not_mnist_dataset = NotMNISTDataset(["A", "B", "C"])
-    not_mnist_dataloader = DataLoader(dataset=not_mnist_dataset, batch_size=20)
-
-    for batch_index, batch in enumerate(not_mnist_dataloader):
-        images = batch[0]
-        labels = batch[1]
-
-        for image, label in zip(images, labels):
-            img = image.numpy()
-            img = img.squeeze()
-
-            plt.imshow(img, interpolation='nearest')
-            plt.show()
-
-            break
-
-        break 
-    """
