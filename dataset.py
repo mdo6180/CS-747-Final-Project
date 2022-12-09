@@ -131,9 +131,11 @@ class NotMNISTDataset(Dataset):
         self, 
         classes: list = None, 
         keep_path: bool = False, 
+        transform: types.ModuleType = None, 
         alphabetical_order: bool = False
     ):
         self.keep_path = keep_path
+        self.transform = transform
 
         data_dir = "./notMNIST_small"
 
@@ -189,7 +191,7 @@ def generate_plot(figname):
     plt.savefig(f"./plots/{figname}")
     
 
-def save_image(image):
+def display_image(image):
     img = image.numpy()
     img = img.squeeze()
     plt.imshow(img, interpolation='nearest')

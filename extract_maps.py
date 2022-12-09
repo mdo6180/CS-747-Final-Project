@@ -1,7 +1,7 @@
 import torch
 from train_model import Net
 from torch.utils.data import ConcatDataset, DataLoader
-from dataset import NotMNISTDataset, MNISTDataset, save_image
+from dataset import NotMNISTDataset, MNISTDataset, display_image
 
 
 class CombinedDataset(ConcatDataset):
@@ -14,10 +14,11 @@ class CombinedDataset(ConcatDataset):
         image = sample[0]
         label = sample[1].item()
 
-        mnist_labels = [0,1,2,3,4,5,6,7,8,9]
-
         if self.in_dist_labels is True:
-            if label in mnist_labels:
+            
+            # out of sample images (i.e., images from notMNIST dataset) 
+            # are labeled 0 for the experiment
+            if len(sample) == 3:
                 return image, label, 0
             else:
                 return image, label, 1
@@ -31,16 +32,20 @@ if __name__ == "__main__":
 
     mnist = MNISTDataset(split="test") 
     notmnist = NotMNISTDataset(keep_path=True)
-    # combined_ds = ConcatDataset([mnist, notmnist])
+    print(len(mnist))
+    print(len(notmnist))
 
     combined_ds = CombinedDataset([mnist, notmnist], in_dist_labels=True)
     combined_dataloader = DataLoader(dataset=combined_ds, batch_size=1)
 
     for i, sample in enumerate(combined_dataloader):
-        # %%
-        if i == 10050:
+
+        if i == 10001:
             image = sample[0]
             label = sample[1]
             out_label = sample[2]
-            save_image(image)
+            display_image(image)
+            print(image.shape)
+            print(label)
+            print(out_label)
             break
