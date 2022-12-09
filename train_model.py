@@ -29,6 +29,8 @@ def get_accuracy(model, data_loader, device):
             y_true = y_true.to(device)
 
             _, y_prob = model(X)
+
+            # this is equivalent to argmax
             _, predicted_labels = torch.max(y_prob, 1)
 
             n += y_true.size(0)
@@ -38,6 +40,7 @@ def get_accuracy(model, data_loader, device):
         return correct_pred.cpu().detach().numpy() / n
     else:
         return correct_pred.detach().numpy() / n
+
 
 def generate_plot(
     x_data, y_data, x_axis_label, y_axis_label, title, filename=None
@@ -56,6 +59,7 @@ def generate_plot(
     
     plt.close()
     
+
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
@@ -83,18 +87,18 @@ class LeNet5(nn.Module):
         
         self.feature_extractor = nn.Sequential(            
             nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1),
-            nn.Tanh(),
-            nn.AvgPool2d(kernel_size=2),
+            nn.relu(),
+            nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1),
-            nn.Tanh(),
-            nn.AvgPool2d(kernel_size=2),
-            nn.Conv2d(in_channels=16, out_channels=120, kernel_size=5, stride=1),
-            nn.Tanh()
+            nn.relu(),
+            nn.MaxPool2d(kernel_size=2),
         )
 
         self.classifier = nn.Sequential(
+            nn.Linear(in_features=16 * 5 * 5, out_features=120),
+            nn.relu(),
             nn.Linear(in_features=120, out_features=84),
-            nn.Tanh(),
+            nn.relu(),
             nn.Linear(in_features=84, out_features=n_classes),
         )
 
@@ -104,6 +108,7 @@ class LeNet5(nn.Module):
         logits = self.classifier(x)
         probs = F.softmax(logits, dim=1)
         return logits, probs
+
 
 if __name__ == "__main__":
 

@@ -130,7 +130,7 @@ class NotMNISTDataset(Dataset):
     def __init__(
         self, 
         classes: list = None, 
-        keep_path: bool = True, 
+        keep_path: bool = False, 
         alphabetical_order: bool = False
     ):
         self.keep_path = keep_path
@@ -166,8 +166,9 @@ class NotMNISTDataset(Dataset):
         x = np.array(img)
 
         y = self.sorted_classes.index(img_path.split("/")[-2])
+        y = torch.tensor(y)
 
-        if self.keep_path:
+        if self.keep_path is True:
             return x, y, img_path
         else:
             return x, y
@@ -187,6 +188,12 @@ def generate_plot(figname):
     plt.ylabel('unemployment rate')
     plt.savefig(f"./plots/{figname}")
     
+
+def save_image(image):
+    img = image.numpy()
+    img = img.squeeze()
+    plt.imshow(img, interpolation='nearest')
+    plt.show()
 
 if __name__ == "__main__":
     if os.path.exists("./plots") is False:
