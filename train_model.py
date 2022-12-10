@@ -127,7 +127,8 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    model = Net()
+    #model = Net()
+    model = LeNet5(n_classes=10)
     model.to(device)
 
     train_dataset = MNISTDataset(split="train") 
@@ -180,21 +181,21 @@ if __name__ == "__main__":
 
         running_loss = 0.0
 
-    torch.save(model.state_dict(), "./saved_models/012-classes-MNIST.pth")
+    torch.save(model.state_dict(), "./saved_models/10-classes-MNIST.pth")
 
     epochs = list(range(1, num_epochs+1))
 
     generate_plot(
         x_data=epochs, y_data=losses, x_axis_label="Epochs", title="Training Loss", 
-        y_axis_label="Cross Entropy Loss", filename="012-mnist-training-loss.png",
+        y_axis_label="Cross Entropy Loss", filename="10-mnist-training-loss.png",
     )
 
     generate_plot(
         x_data=epochs, y_data=train_accuracy_scores, x_axis_label="Epochs", title="Training Accuracy", 
-        y_axis_label="Percent Accuracy", filename="012-mnist-training-accuracy.png",
+        y_axis_label="Percent Accuracy", filename="10-mnist-training-accuracy.png",
     )
 
     generate_plot(
         x_data=epochs, y_data=test_accuracy_scores, x_axis_label="Epochs", title="Testing Accuracy", 
-        y_axis_label="Percent Accuracy", filename="012-mnist-testing-accuracy.png",
+        y_axis_label="Percent Accuracy", filename="10-mnist-testing-accuracy.png",
     )
