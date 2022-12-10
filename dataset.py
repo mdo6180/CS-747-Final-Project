@@ -99,25 +99,16 @@ class MNISTDataset(Dataset):
         self.y = Y
         self.num_samples = self.y.shape[0]
 
-        if transform is not None:
-            self.transform = transform
-
-        else:
-            self.transform = transforms.Compose(
-                [
-                    transforms.ToTensor(), 
-                    transforms.Resize((32,32))
-                ]
-            )
+        self.transform = transform
 
     def __getitem__(self, index):
         IMG_SHAPE = (28,28)
         img = np.reshape(self.x[index], IMG_SHAPE)
-        label = self.y[index]
-
-        if self.transform != None:
+        if self.transform is not None:
             img = self.transform(img)
-            label = torch.tensor(label)
+
+        label = self.y[index]
+        label = torch.tensor(label)
 
         return img, label
 
@@ -165,15 +156,18 @@ class NotMNISTDataset(Dataset):
 
         img_path = self.img_paths[index]
         img = Image.open(img_path).convert("L")
-        x = np.array(img)
+        img = np.array(img)
+        img = np.reshape(img, IMG_SHAPE)
+        if self.transform is not None:
+            img = self.transform(img)
 
-        y = self.sorted_classes.index(img_path.split("/")[-2])
-        y = torch.tensor(y)
+        label = self.sorted_classes.index(img_path.split("/")[-2])
+        label = torch.tensor(label)
 
         if self.keep_path is True:
-            return x, y, img_path
+            return img, label, img_path
         else:
-            return x, y
+            return img, label
 
     def __len__(self):
         return self.num_samples

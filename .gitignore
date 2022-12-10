@@ -8,3 +8,4 @@ GPU-Instance-Key.pem
 saved_models/
 plots/
 github-key.txt
+activation-maps/

@@ -1,9 +1,11 @@
 import torch
-from train_model import Net
+from train_model import Net, LeNet5, LeNet5_transform
 from torch.utils.data import ConcatDataset, DataLoader
 from dataset import NotMNISTDataset, MNISTDataset, display_image
 import numpy as np
-
+from typing import List
+import os
+from torchvision import transforms
 
 class CombinedDataset(ConcatDataset):
     def __init__(self, datasets, in_dist_labels: bool = False):
@@ -27,7 +29,7 @@ class CombinedDataset(ConcatDataset):
             return image, label
 
 
-def extract(model, dataloader: DataLoader, layers: list[str], save_path: str):
+def extract(model, dataloader: DataLoader, layers: List[str], save_path: str):
 
     model.eval()
     extractor_outputs = {key:[] for key in layers}
@@ -48,10 +50,18 @@ def extract(model, dataloader: DataLoader, layers: list[str], save_path: str):
             handle = module.register_forward_hook(outer_hook(layer_name))
             handles.append(handle)
     
-    for batch in dataloader:
+    for batch_id, batch in enumerate(dataloader):
         images = batch[0]
         model(images)
-        break
+        try:
+            model(images)
+        except:
+            print(f"extraction program broke on batch: {batch_id}")
+            print(batch)
+            break
+
+    if os.path.exists("./activation-maps") is False:
+        os.makedirs("./activation-maps")
 
     for layer, activation_maps in extractor_outputs.items():
         maps = np.asarray(activation_maps)
@@ -64,13 +74,16 @@ def extract(model, dataloader: DataLoader, layers: list[str], save_path: str):
 if __name__ == "__main__":
     model = Net()
     model.load_state_dict(torch.load("./saved_models/012-classes-MNIST.pth"))
+    #model = LeNet5(n_classes=10)
+    #model.load_state_dict(torch.load("./saved_models/10-classes-MNIST.pth"))
 
-    mnist = MNISTDataset(split="test") 
-    notmnist = NotMNISTDataset(keep_path=True)
+    mnist = MNISTDataset(split="test", transform=LeNet5_transform) 
+    notmnist = NotMNISTDataset(keep_path=True, transform=LeNet5_transform)
     print(len(mnist))
     print(len(notmnist))
 
     combined_ds = CombinedDataset([mnist, notmnist], in_dist_labels=True)
     combined_dataloader = DataLoader(dataset=combined_ds, batch_size=2)
 
-    extract(model=model, dataloader=combined_dataloader, layers=["conv2", "fc1"], save_path=".")
+    extract(model=model, dataloader=notmnist, layers=["conv2", "fc1"], save_path=".")
+    
