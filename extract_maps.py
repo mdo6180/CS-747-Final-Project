@@ -1,11 +1,11 @@
 import torch
-from train_model import Net, LeNet5, LeNet5_transform
+from train_model import Net, LeNet5_transform
 from torch.utils.data import ConcatDataset, DataLoader
 from dataset import NotMNISTDataset, MNISTDataset, display_image
 import numpy as np
 from typing import List
 import os
-from torchvision import transforms
+
 
 class CombinedDataset(ConcatDataset):
     def __init__(self, datasets, in_dist_labels: bool = False):
@@ -53,12 +53,6 @@ def extract(model, dataloader: DataLoader, layers: List[str], save_path: str):
     for batch_id, batch in enumerate(dataloader):
         images = batch[0]
         model(images)
-        try:
-            model(images)
-        except:
-            print(f"extraction program broke on batch: {batch_id}")
-            print(batch)
-            break
 
     if os.path.exists("./activation-maps") is False:
         os.makedirs("./activation-maps")
@@ -73,17 +67,16 @@ def extract(model, dataloader: DataLoader, layers: List[str], save_path: str):
 
 if __name__ == "__main__":
     model = Net()
-    model.load_state_dict(torch.load("./saved_models/012-classes-MNIST.pth"))
-    #model = LeNet5(n_classes=10)
-    #model.load_state_dict(torch.load("./saved_models/10-classes-MNIST.pth"))
+    model.load_state_dict(torch.load("./saved_models/10-classes-MNIST.pth"))
 
     mnist = MNISTDataset(split="test", transform=LeNet5_transform) 
     notmnist = NotMNISTDataset(keep_path=True, transform=LeNet5_transform)
-    print(len(mnist))
-    print(len(notmnist))
+    # notmnist_dataloader = DataLoader(dataset=notmnist, batch_size=2)
+    print(f"number of samples in MNIST: {len(mnist)}")
+    print(f"number of samples in MNIST: {len(notmnist)}")
 
     combined_ds = CombinedDataset([mnist, notmnist], in_dist_labels=True)
     combined_dataloader = DataLoader(dataset=combined_ds, batch_size=2)
 
-    extract(model=model, dataloader=notmnist, layers=["conv2", "fc1"], save_path=".")
+    extract(model=model, dataloader=combined_dataloader, layers=["conv2", "fc1"], save_path=".")
     

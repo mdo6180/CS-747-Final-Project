@@ -140,7 +140,9 @@ class NotMNISTDataset(Dataset):
         self.img_paths = []
         for path, dir, files in os.walk(data_dir):
             for filename in files:
-                if filename != ".DS_Store":
+                # make sure file is not .DS_Store file on mac and make sure the file is not empty
+                # i have encountered some empty files when downloading notMNIST from kaggle
+                if filename != ".DS_Store" and (os.stat(path).st_size > 0):
                     classname = path.split("/")[-1]
                     
                     if classname in self.classes:

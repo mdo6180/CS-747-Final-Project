@@ -80,81 +80,6 @@ class Net(nn.Module):
         probs = F.softmax(logits, dim=1)
         return logits, probs
 
-class LeNet(nn.Module):
-    def __init__(self, n_classes: int):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1)
-        self.relu1 = nn.ReLU(),
-        self.pool1 = nn.MaxPool2d(kernel_size=2)
-
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1)
-        self.relu2 = nn.ReLU(),
-        self.pool2 = nn.MaxPool2d(kernel_size=2)
-
-        self.fc1 = nn.Linear(in_features=16 * 5 * 5, out_features=120)
-        self.fc_relu1 = nn.ReLU(),
-        self.fc2 = nn.Linear(in_features=120, out_features=84)
-        self.fc_relu2 = nn.ReLU(),
-        self.fc3 = nn.Linear(in_features=84, out_features=n_classes)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.pool1(x)
-
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.pool2(x)
-
-        x = flatten(x, 1) # flatten all dimensions except batch
-        
-        x = self.fc1(x)
-        x = self.fc_relu1(x)
-        x = self.fc2(x)
-        x = self.fc_relu2(x)
-
-        logits = self.fc3(x)
-        probs = F.softmax(logits, dim=1)
-
-        return logits, probs
-
-class LeNet5(nn.Module):
-
-    def __init__(self, n_classes):
-        super(LeNet5, self).__init__()
-        
-        self.feature_extractor = nn.Sequential(            
-            OrderedDict(
-                [
-                    ("conv1", nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1)),
-                    ("relu1", nn.ReLU()),
-                    ("maxpool1", nn.MaxPool2d(kernel_size=2)),
-                    ("conv2", nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1)),
-                    ("relu2", nn.ReLU()),
-                    ("maxpool2", nn.MaxPool2d(kernel_size=2))
-                ]
-            )
-        )
-
-        self.classifier = nn.Sequential(
-            OrderedDict(
-                [
-                    ("fc1", nn.Linear(in_features=16 * 5 * 5, out_features=120)),
-                    ("fc_relu1", nn.ReLU()),
-                    ("fc2", nn.Linear(in_features=120, out_features=84)),
-                    ("fc_relu2", nn.ReLU())
-                    ("fc3", nn.Linear(in_features=84, out_features=n_classes))
-                ]
-            )
-        )
-
-    def forward(self, x):
-        x = self.feature_extractor(x)
-        x = torch.flatten(x, 1)
-        logits = self.classifier(x)
-        probs = F.softmax(logits, dim=1)
-        return logits, probs
-
 
 LeNet5_transform = transforms.Compose(
         [
@@ -162,6 +87,7 @@ LeNet5_transform = transforms.Compose(
             transforms.Resize((32,32))
         ]
     )
+
 
 if __name__ == "__main__":
 
@@ -181,7 +107,6 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = Net()
-    #model = LeNet5(n_classes=10)
     model.to(device)
 
     train_dataset = MNISTDataset(split="train", transform=LeNet5_transform) 
