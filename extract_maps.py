@@ -1,7 +1,7 @@
 import torch
 from train_model import Net, LeNet5_transform
 from torch.utils.data import ConcatDataset, DataLoader
-from dataset import NotMNISTDataset, MNISTDataset, display_image
+from dataset import NotMNISTDataset, MNISTDataset 
 import numpy as np
 from typing import List
 import os
@@ -20,16 +20,16 @@ class CombinedDataset(ConcatDataset):
         if self.in_dist_labels is True:
             
             # out of sample images (i.e., images from notMNIST dataset) 
-            # are labeled 0 for the experiment
+            # are labeled -1 for the experiment
             if len(sample) == 3:
-                return image, label, 0
+                return image, label, -1
             else:
                 return image, label, 1
         else:
             return image, label
 
 
-def extract(model, dataloader: DataLoader, layers: List[str], save_path: str):
+def extract(model, dataloader: DataLoader, layers: List[str], folder_name: str):
 
     model.eval()
     extractor_outputs = {key:[] for key in layers}
@@ -54,12 +54,12 @@ def extract(model, dataloader: DataLoader, layers: List[str], save_path: str):
         images = batch[0]
         model(images)
 
-    if os.path.exists("./activation-maps") is False:
-        os.makedirs("./activation-maps")
+    if os.path.exists(f"./{folder_name}") is False:
+        os.makedirs(f"./{folder_name}")
 
     for layer, activation_maps in extractor_outputs.items():
         maps = np.asarray(activation_maps)
-        np.save(f"./activation-maps/{layer}-maps.npz", maps)
+        np.save(f"./{folder_name}/{layer}-maps.npz", maps)
 
     for handle in handles:
         handle.remove()
@@ -69,14 +69,24 @@ if __name__ == "__main__":
     model = Net()
     model.load_state_dict(torch.load("./saved_models/10-classes-MNIST.pth"))
 
-    mnist = MNISTDataset(split="test", transform=LeNet5_transform) 
-    notmnist = NotMNISTDataset(keep_path=True, transform=LeNet5_transform)
-    # notmnist_dataloader = DataLoader(dataset=notmnist, batch_size=2)
-    print(f"number of samples in MNIST: {len(mnist)}")
-    print(f"number of samples in MNIST: {len(notmnist)}")
+    mnist_train_ds = MNISTDataset(split="train", transform=LeNet5_transform)
+    mnist_train_dataloader = DataLoader(dataset=mnist_train_ds, batch_size=100)
 
-    combined_ds = CombinedDataset([mnist, notmnist], in_dist_labels=True)
-    combined_dataloader = DataLoader(dataset=combined_ds, batch_size=2)
+    mnist_test_ds = MNISTDataset(split="test", transform=LeNet5_transform) 
+    mnist_test_dataloader = DataLoader(dataset=mnist_test_ds, batch_size=100)
 
-    extract(model=model, dataloader=combined_dataloader, layers=["conv2", "fc1"], save_path=".")
+    notmnist_ds = NotMNISTDataset(keep_path=True, transform=LeNet5_transform)
+    notmnist_dataloader = DataLoader(dataset=notmnist_ds, batch_size=100)
+
+    print(f"number of samples in MNIST train: {len(mnist_train_ds)}")
+    print(f"number of samples in MNIST test: {len(mnist_test_ds)}")
+    print(f"number of samples in notMNIST: {len(notmnist_ds)}")
+
+    combined_ds = CombinedDataset([mnist_test_ds, notmnist_ds], in_dist_labels=True)
+    combined_dataloader = DataLoader(dataset=combined_ds, batch_size=100)
+
+    extract(model=model, dataloader=mnist_train_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-train")
+    extract(model=model, dataloader=mnist_test_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-test")
+    extract(model=model, dataloader=notmnist_dataloader, layers=["conv2", "fc1"], folder_name="notMNIST")
+    extract(model=model, dataloader=combined_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-notMNIST-combined")
     

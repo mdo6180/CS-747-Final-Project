@@ -9,3 +9,7 @@ saved_models/
 plots/
 github-key.txt
 activation-maps/
+MNIST-notMNIST-combined/
+MNIST-test/
+MNIST-train/
+notMNIST/
