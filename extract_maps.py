@@ -29,7 +29,13 @@ class CombinedDataset(ConcatDataset):
             return image, label
 
 
-def extract(model, dataloader: DataLoader, layers: List[str], folder_name: str):
+def extract(
+    model, 
+    dataloader: DataLoader, 
+    layers: List[str], 
+    folder_name: str, 
+    flatten: bool = False
+):
 
     model.eval()
     extractor_outputs = {key:[] for key in layers}
@@ -57,9 +63,22 @@ def extract(model, dataloader: DataLoader, layers: List[str], folder_name: str):
     if os.path.exists(f"./{folder_name}") is False:
         os.makedirs(f"./{folder_name}")
 
+    def prod(tup):
+        product = 1
+        for element in tup:
+            product *= element
+        return product
+    
     for layer, activation_maps in extractor_outputs.items():
         maps = np.asarray(activation_maps)
-        np.save(f"./{folder_name}/{layer}-maps.npz", maps)
+
+        if flatten is True:
+            num_samples = maps.shape[0]
+            num_columns = prod(maps.shape[1:])
+            maps = np.reshape(maps, (num_samples, num_columns))
+            np.save(f"./{folder_name}/{layer}-flattened-maps", maps)
+        else: 
+            np.save(f"./{folder_name}/{layer}-maps", maps)
 
     for handle in handles:
         handle.remove()
@@ -85,8 +104,9 @@ if __name__ == "__main__":
     combined_ds = CombinedDataset([mnist_test_ds, notmnist_ds], in_dist_labels=True)
     combined_dataloader = DataLoader(dataset=combined_ds, batch_size=100)
 
-    extract(model=model, dataloader=mnist_train_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-train")
-    extract(model=model, dataloader=mnist_test_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-test")
-    extract(model=model, dataloader=notmnist_dataloader, layers=["conv2", "fc1"], folder_name="notMNIST")
-    extract(model=model, dataloader=combined_dataloader, layers=["conv2", "fc1"], folder_name="MNIST-notMNIST-combined")
+    extraction_layers = ["conv2", "fc1"]
+    extract(model=model, dataloader=mnist_train_dataloader, layers=extraction_layers, folder_name="MNIST-train", flatten=True)
+    extract(model=model, dataloader=mnist_test_dataloader, layers=extraction_layers, folder_name="MNIST-test", flatten=True)
+    extract(model=model, dataloader=notmnist_dataloader, layers=extraction_layers, folder_name="notMNIST", flatten=True)
+    extract(model=model, dataloader=combined_dataloader, layers=extraction_layers, folder_name="MNIST-notMNIST-combined", flatten=True)
     
