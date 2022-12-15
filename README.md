@@ -5,7 +5,9 @@ Instructions to setup project
 $ cd CS-747-Final-Project
 
 Download notMNIST dataset from here (https://www.kaggle.com/datasets/lubaroli/notmnist)
+
 Download the MNIST dataset from here (http://yann.lecun.com/exdb/mnist/)
+
 Note: all the data should be inside the CS-747-Final-Project folder
 
 Install pip
