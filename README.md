@@ -2,7 +2,11 @@
 
 Instructions to setup project
 
+Download project from here (https://github.com/mdo6180/CS-747-Final-Project)
+
+```
 $ cd CS-747-Final-Project
+```
 
 Download notMNIST dataset from here (https://www.kaggle.com/datasets/lubaroli/notmnist)
 
