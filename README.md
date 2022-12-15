@@ -35,3 +35,8 @@ $ python3 anomaly_detection.py
 ```
 
 Run the cells in the analysis.ipynb jupyter notebook to compute the metrics
+
+Disclaimer: 
+1. You may have to make some changes to the each file (may just be some paths that are local to my machine).
+2. I ran these files on an AWS g4dn.xlarge instance using this AMI (https://aws.amazon.com/marketplace/pp/prodview-64e4rx3h733ru?sr=0-3&ref_=beagle&applicationId=AWSMPContessa)
+
